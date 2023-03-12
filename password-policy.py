@@ -36,8 +36,6 @@ def login():
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     if request.method == "POST":
-        # Update the user's password in the database
-        # Update the user's last_password_change_date to the current date
         user = users_url + "/users/" + (request.form["username"])
         # Redirect the user to the login page
         return redirect("/login")
