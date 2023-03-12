@@ -1,6 +1,21 @@
 // Import the zxcvbn library
 import zxcvbn from 'zxcvbn';
 
+// Check password strength using zxcvbn.js and update strength meter and text
+var passwordInput = document.getElementById('password');
+var meter = document.getElementById('password-strength-meter');
+var text = document.getElementById('password-strength-text');
+
+passwordInput.addEventListener('input', function () {
+    var result = zxcvbn(passwordInput.value);
+    meter.value = result.score;
+    if (passwordInput.value !== "") {
+        text.innerHTML = "Password strength: " + result.score + "/4 - " + result.feedback.warning;
+    } else {
+        text.innerHTML = "";
+    }
+});
+
 // Define a function to check the password strength and return the result
 function checkPasswordStrength(password) {
     return zxcvbn(password);
