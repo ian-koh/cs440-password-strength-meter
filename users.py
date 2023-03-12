@@ -4,7 +4,7 @@ import bcrypt
 import datetime
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:@localhost/users"
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root@localhost:3306/users"
 db = SQLAlchemy(app)
 
 
@@ -23,6 +23,8 @@ class User(db.Model):
 def create_user():
     username = request.json["username"]
     password = request.json["password"]
+    print(username)
+    print(password)
     hashed_password = bcrypt.hashpw(
         password.encode("utf-8"), bcrypt.gensalt()
     ).decode("utf-8")

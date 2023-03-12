@@ -1,48 +1,57 @@
-// Import the zxcvbn library
-import zxcvbn from 'zxcvbn';
+//import zxcvbn from 'zxcvbn'
+var users_url = "http://localhost:5000/"
 
 // Check password strength using zxcvbn.js and update strength meter and text
-var passwordInput = document.getElementById('password');
+var usernameInput = document.getElementById('username_register')
+var passwordInput = document.getElementById('password_register');
 var meter = document.getElementById('password-strength-meter');
 var text = document.getElementById('password-strength-text');
+var submitButton = document.getElementById("submit-button");
 
 passwordInput.addEventListener('input', function () {
+    text.innerHTML = "hi"
+    //check the password strength and return the result
     var result = zxcvbn(passwordInput.value);
     meter.value = result.score;
     if (passwordInput.value !== "") {
-        text.innerHTML = "Password strength: " + result.score + "/4 - " + result.feedback.warning;
+        submitButton.disabled = true;
+        if (result.score == 4) {
+            submitButton.disabled = false;
+        }
+        text.innerHTML = "Password strength: " + result.score + "/4 \n " + result.feedback.warning + " " + result.feedback.suggestions;
     } else {
         text.innerHTML = "";
     }
 });
 
-// Define a function to check the password strength and return the result
-function checkPasswordStrength(password) {
-    return zxcvbn(password);
-}
 
-// Define a function to prompt the user to enter a password and return the result
-function promptForPassword() {
-    const password = prompt('Enter a password:');
-    return zxcvbn(password);
-}
-
-// Define a function to generate suggestions for improving the password
-function generatePasswordSuggestions(result) {
-    const suggestions = [];
-
-    if (result.feedback.warning) {
-        suggestions.push(result.feedback.warning);
+submitButton.addEventListener('click', function () {
+    //On click submit, send to backend to hash the password with bcrypt
+    var data = {
+        username: usernameInput,
+        password: passwordInput
     }
+    console.log(data)
+    fetch(users_url + "users", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Error.');
+            }
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 
-    if (result.feedback.suggestions.length > 0) {
-        suggestions.push(...result.feedback.suggestions);
-    }
+});
 
-    return suggestions;
-}
-
-// Example usage
-const result = promptForPassword();
-console.log(`Password strength: ${result.score}`);
-console.log(`Suggestions: ${generatePasswordSuggestions(result).join(', ')}`);
