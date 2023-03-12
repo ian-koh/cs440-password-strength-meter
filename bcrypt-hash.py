@@ -1,7 +1,27 @@
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
 import bcrypt
 
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///example.db'
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    user = User(username=username, password=password)
+    db.session.add(user)
+    db.session.commit()
+    return f"User {username} created with id {user.id}"
+
 
 
 @app.route("/hash_password", methods=["POST"])
