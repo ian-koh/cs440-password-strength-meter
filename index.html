@@ -1,2 +1,51 @@
-<script src="bower_components/zxcvbn/dist/zxcvbn.js">
-</script>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login and Registration Page</title>
+    <!-- Load zxcvbn.js from Bower components -->
+    <script src="bower_components/zxcvbn/dist/zxcvbn.js"></script>
+</head>
+
+<body>
+    <h1>Login</h1>
+    <form action="/login" method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    <h1>Registration</h1>
+    <form action="/register" method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <!-- Add password strength meter using zxcvbn.js -->
+        <meter max="4" id="password-strength-meter"></meter>
+        <p id="password-strength-text"></p>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        // Check password strength using zxcvbn.js and update strength meter and text
+        var passwordInput = document.getElementById('password');
+        var meter = document.getElementById('password-strength-meter');
+        var text = document.getElementById('password-strength-text');
+
+        passwordInput.addEventListener('input', function () {
+            var result = zxcvbn(passwordInput.value);
+            meter.value = result.score;
+            if (passwordInput.value !== "") {
+                text.innerHTML = "Password strength: " + result.score + "/4 - " + result.feedback.warning;
+            } else {
+                text.innerHTML = "";
+            }
+        });
+    </script>
+</body>
+
+</html>
