@@ -2,14 +2,18 @@
 var users_url = "http://localhost:5000/"
 
 // Check password strength using zxcvbn.js and update strength meter and text
-var usernameInput = document.getElementById('username_register');
-var passwordInput = document.getElementById('password_register');
+var usernameInput = document.getElementById('username-register');
+var passwordInput = document.getElementById('password-register');
 var meter = document.getElementById('password-strength-meter');
 var text = document.getElementById('password-strength-text');
 var submitButton = document.getElementById("submit-button");
 var regForm = document.getElementById('reg-form');
-submitButton.disabled = true;
 
+
+
+
+// Disables submit button for registation form unless zxvbn condition is met
+submitButton.disabled = true;
 passwordInput.addEventListener('input', function () {
     text.innerHTML = "hi"
     //check the password strength and return the result
@@ -27,8 +31,8 @@ passwordInput.addEventListener('input', function () {
 });
 
 
+//onSubmitting registration form, calls the backend and add user to database with password hashed with bcrypt
 regForm.addEventListener("submit", processFormData);
-
 function processFormData(event) {
     // Get the form data
     var username = document.getElementById("username_register").value;

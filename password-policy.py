@@ -1,19 +1,25 @@
 from datetime import datetime, timedelta
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, jsonify, url_for
+import bcrypt
+import requests
+from flask_cors import CORS
+from invokes import invoke_http
+import json
+
 
 users_url = "http://localhost:5000/"
 app = Flask(__name__)
-
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 # Set the password expiration time limit in days
 PASSWORD_EXPIRATION_DAYS = 60
 
 
 # Function to check if a user's password has expired
 def is_password_expired(user):
-    last_password_change_date = user.last_password_change_date
-    expiration_date = last_password_change_date + timedelta(
-        days=PASSWORD_EXPIRATION_DAYS
-    )
+    last_password_change_date = user["last_password_change_date"]
+    expiration_date = datetime.strptime(
+        last_password_change_date, "%Y-%m-%d"
+    ) + timedelta(days=PASSWORD_EXPIRATION_DAYS)
     return datetime.now() > expiration_date
 
 
@@ -21,26 +27,66 @@ def is_password_expired(user):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        # Check if the user's password has expired
-        user = users_url + "/users/" + (request.form["username"])
-        if user and is_password_expired(user):
-            # Redirect the user to the change password page
-            return redirect("/change_password")
-        # Check the user's login credentials and log them in
-        # ...
-    else:
-        return render_template("login.html")
+        username = request.json["username"]
+        password = request.json["password"]
+        print(username)
+        print(password)
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt()
+        ).decode("utf-8")
+
+        try:
+            response = invoke_http(users_url + "users/" + username)
+            user = json.loads(response["data"])
+            print(type(user))
+            print(user)
+
+        except:
+            return {"message": "User does not exist"}
+        # If password is wrong
+        if not bcrypt.checkpw(
+            password.encode("utf-8"), user["password_hash"].encode("utf-8")
+        ):
+            return jsonify({"code": 401, "data": "Incorrect password"}), 401
+            # Check if the user's password has expired
+        else:
+            if is_password_expired(user):
+                # Redirect the user to the change password page
+                return redirect(
+                    "/change_password?username={}".format(username)
+                )
+            return jsonify({"code": 200, "data": "Welcome " + username})
+    return render_template("login.html")
+
+
+# home page route
+@app.route("/home")
+def home():
+    username = request.args.get("username")
+    message = "Welcome " + str(username)
+    return "Welcome " + username
 
 
 # Route for changing the user's password
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
+    username = request.args.get("username")
+    user = users_url + "/users/" + username
+    # Redirect the user to the login page
     if request.method == "POST":
-        user = users_url + "/users/" + (request.form["username"])
-        # Redirect the user to the login page
-        return redirect("/login")
-    else:
-        return render_template("change_password.html")
+        current_password = request.json["current_password"]
+        new_password = request.json["new_password"]
+        data = {
+            "current_password": current_password,
+            "new_password": new_password,
+        }
+        result = requests.put(
+            users_url + username + "/password",
+            json=data,
+            headers={"Content-Type": "application/json"},
+        )
+        return result, redirect("main.html")
+    return render_template("change_password.html")
 
 
 if __name__ == "__main__":

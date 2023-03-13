@@ -1,9 +1,10 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
 import datetime
-import jsonify
 from flask_cors import CORS
+import json
+from datetime import date
 
 # General flask settings
 app = Flask(__name__)
@@ -21,8 +22,22 @@ class Users(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     last_password_change_date = db.Column(db.Date, nullable=False)
 
-    def __repr__(self):
-        return "<User %r>" % self.username
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, date):
+            return obj.strftime("%Y-%m-%d")
+        return super().default(obj)
+
+
+def model_to_json(model_obj):
+    return json.dumps(
+        {
+            column.name: getattr(model_obj, column.name)
+            for column in model_obj.__table__.columns
+        },
+        cls=CustomEncoder,
+    )
 
 
 # Update user password endpoint for when password expires after 60 days
@@ -49,7 +64,7 @@ def update_user_password(username):
     return {"message": "Password updated successfully"}
 
 
-# ----------------------------------------------INTERACTION WITH USER DB -----------------------------------------------------------
+# ----------------------------------------------REGISTRATION -----------------------------------------------------------
 
 
 # Creates user and stores zxcvbn password as bcrypt hashed password
@@ -90,7 +105,10 @@ def create_user():
     return {"message": "User created successfully"}
 
 
-# Ger all users
+# ------------------------------------------------------------------------------------LOGIN-------------------------------------------------------------------------------------
+
+
+# Get all users
 @app.route("/users")
 def get_users():
     users = Users.query.all()
@@ -102,12 +120,10 @@ def get_users():
 def get_user_by_username(username):
     user = Users.query.filter_by(username=username).first()
     if user is None:
-        return {"message": "User not found"}, 404
+        return jsonify({"message": "User not found"}), 404
     else:
-        return {
-            "username": user.username,
-            "last_password_change_date": user.last_password_change_date,
-        }
+        print(user.password_hash)
+        return jsonify({"code": 200, "data": model_to_json(user)}), 200
 
 
 if __name__ == "__main__":
