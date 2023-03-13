@@ -2,11 +2,12 @@
 var users_url = "http://localhost:5000/"
 
 // Check password strength using zxcvbn.js and update strength meter and text
-var usernameInput = document.getElementById('username_register')
+var usernameInput = document.getElementById('username_register');
 var passwordInput = document.getElementById('password_register');
 var meter = document.getElementById('password-strength-meter');
 var text = document.getElementById('password-strength-text');
 var submitButton = document.getElementById("submit-button");
+var regForm = document.getElementById('reg-form');
 submitButton.disabled = true;
 
 passwordInput.addEventListener('input', function () {
@@ -26,13 +27,24 @@ passwordInput.addEventListener('input', function () {
 });
 
 
-submitButton.addEventListener('click', function () {
-    //On click submit, send to backend to hash the password with bcrypt
+regForm.addEventListener("submit", processFormData);
+
+function processFormData(event) {
+    // Get the form data
+    var username = document.getElementById("username_register").value;
+    var password = document.getElementById("password_register").value;
+
+    // Do something with the data
+    console.log(username);
+    console.log(password);
     var data = {
-        username: usernameInput,
-        password: passwordInput
+        username: username,
+        password: password
     }
     console.log(data)
+    // Prevent the default form submission
+    event.preventDefault();
+
     fetch(users_url + "users", {
         method: 'POST',
         mode: 'cors',
@@ -55,5 +67,4 @@ submitButton.addEventListener('click', function () {
             console.error('Error:', error);
         });
 
-});
-
+}

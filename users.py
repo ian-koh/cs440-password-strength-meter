@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import bcrypt
 import datetime
 import jsonify
+from flask_cors import CORS
 
 
 app = Flask(__name__)
@@ -10,9 +11,10 @@ app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = "mysql+mysqlconnector://root@localhost:3306/users"
 db = SQLAlchemy(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-class User(db.Model):
+class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -32,7 +34,7 @@ def create_user():
     hashed_password = bcrypt.hashpw(
         password.encode("utf-8"), bcrypt.gensalt()
     ).decode("utf-8")
-    new_user = User(
+    new_user = Users(
         username=username,
         password_hash=hashed_password,
         last_password_change_date=datetime.date.today(),
@@ -45,7 +47,6 @@ def create_user():
     except Exception as e:
         print("\n Error in committing to database")
         print(e)
-        print(e.body)
 
         return (
             jsonify(
@@ -63,7 +64,7 @@ def create_user():
 
 @app.route("/users/<username>/password", methods=["PUT"])
 def update_user_password(username):
-    user = User.query.filter_by(username=username).first()
+    user = Users.query.filter_by(username=username).first()
     if user is None:
         return {"message": "User not found"}, 404
 
@@ -86,13 +87,13 @@ def update_user_password(username):
 
 @app.route("/users")
 def get_users():
-    users = User.query.all()
+    users = Users.query.all()
     return {"users": [user.username for user in users]}
 
 
 @app.route("/users/<username>")
 def get_user_by_username(username):
-    user = User.query.filter_by(username=username).first()
+    user = Users.query.filter_by(username=username).first()
     if user is None:
         return {"message": "User not found"}, 404
     else:
