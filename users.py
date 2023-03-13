@@ -2,9 +2,13 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
 import datetime
+import jsonify
+
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root@localhost:3306/users"
+app.config[
+    "SQLALCHEMY_DATABASE_URI"
+] = "mysql+mysqlconnector://root@localhost:3306/users"
 db = SQLAlchemy(app)
 
 
@@ -33,8 +37,27 @@ def create_user():
         password_hash=hashed_password,
         last_password_change_date=datetime.date.today(),
     )
-    db.session.add(new_user)
-    db.session.commit()
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+
+    except Exception as e:
+        print("\n Error in committing to database")
+        print(e)
+        print(e.body)
+
+        return (
+            jsonify(
+                {
+                    "code": 500,
+                    "data": {"username": new_user["username"]},
+                    "message": "An error occurred when creating the new user",
+                }
+            ),
+            500,
+        )
+
     return {"message": "User created successfully"}
 
 

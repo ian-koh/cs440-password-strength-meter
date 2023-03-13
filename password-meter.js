@@ -7,6 +7,7 @@ var passwordInput = document.getElementById('password_register');
 var meter = document.getElementById('password-strength-meter');
 var text = document.getElementById('password-strength-text');
 var submitButton = document.getElementById("submit-button");
+submitButton.disabled = true;
 
 passwordInput.addEventListener('input', function () {
     text.innerHTML = "hi"
@@ -34,6 +35,7 @@ submitButton.addEventListener('click', function () {
     console.log(data)
     fetch(users_url + "users", {
         method: 'POST',
+        mode: 'cors',
         headers: {
             'Content-Type': 'application/json'
         },
