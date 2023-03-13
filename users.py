@@ -5,7 +5,7 @@ import datetime
 import jsonify
 from flask_cors import CORS
 
-
+# General flask settings
 app = Flask(__name__)
 app.config[
     "SQLALCHEMY_DATABASE_URI"
@@ -14,6 +14,7 @@ db = SQLAlchemy(app)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 
+# Instantiate db model for users table
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
@@ -24,7 +25,34 @@ class Users(db.Model):
         return "<User %r>" % self.username
 
 
-# Creates user and stores zxcvbn password as bcrypt
+# Update user password endpoint for when password expires after 60 days
+@app.route("/users/<username>/password", methods=["PUT"])
+def update_user_password(username):
+    user = Users.query.filter_by(username=username).first()
+    if user is None:
+        return {"message": "User not found"}, 404
+
+    current_password = request.json["current_password"]
+    new_password = request.json["new_password"]
+    if not bcrypt.checkpw(
+        current_password.encode("utf-8"), user.password_hash.encode("utf-8")
+    ):
+        return {"message": "Incorrect password"}, 401
+
+    new_hashed_password = bcrypt.hashpw(
+        new_password.encode("utf-8"), bcrypt.gensalt()
+    ).decode("utf-8")
+    user.password_hash = new_hashed_password
+    user.last_password_change_date = datetime.date.today()
+    db.session.commit()
+
+    return {"message": "Password updated successfully"}
+
+
+# ----------------------------------------------INTERACTION WITH USER DB -----------------------------------------------------------
+
+
+# Creates user and stores zxcvbn password as bcrypt hashed password
 @app.route("/users", methods=["POST"])
 def create_user():
     username = request.json["username"]
@@ -62,35 +90,14 @@ def create_user():
     return {"message": "User created successfully"}
 
 
-@app.route("/users/<username>/password", methods=["PUT"])
-def update_user_password(username):
-    user = Users.query.filter_by(username=username).first()
-    if user is None:
-        return {"message": "User not found"}, 404
-
-    current_password = request.json["current_password"]
-    new_password = request.json["new_password"]
-    if not bcrypt.checkpw(
-        current_password.encode("utf-8"), user.password_hash.encode("utf-8")
-    ):
-        return {"message": "Incorrect password"}, 401
-
-    new_hashed_password = bcrypt.hashpw(
-        new_password.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
-    user.password_hash = new_hashed_password
-    user.last_password_change_date = datetime.date.today()
-    db.session.commit()
-
-    return {"message": "Password updated successfully"}
-
-
+# Ger all users
 @app.route("/users")
 def get_users():
     users = Users.query.all()
     return {"users": [user.username for user in users]}
 
 
+# Get user by username
 @app.route("/users/<username>")
 def get_user_by_username(username):
     user = Users.query.filter_by(username=username).first()
