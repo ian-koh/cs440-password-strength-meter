@@ -44,6 +44,9 @@ async function processFormData(event) {
     if (result.code === 500) {
         document.getElementById("error-message").innerHTML = "User does not exist"
     }
+    if (result.code === 600) {
+        window.location.replace("change_password.html?username=" + encodeURIComponent(username));
+    }
 
 
 

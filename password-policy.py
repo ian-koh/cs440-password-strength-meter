@@ -52,9 +52,8 @@ def login():
         else:
             if is_password_expired(user):
                 # Redirect the user to the change password page
-                return redirect(
-                    "/change_password?username={}".format(username)
-                )
+                return redirect(url_for("change_password", username=username))
+
             return jsonify({"code": 200, "data": "Welcome " + username})
     return render_template("login.html")
 
@@ -71,22 +70,34 @@ def home():
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     username = request.args.get("username")
-    user = users_url + "/users/" + username
+    print(username)
     # Redirect the user to the login page
     if request.method == "POST":
         current_password = request.json["current_password"]
         new_password = request.json["new_password"]
+        username = request.json["username"]
+        # Prevent user from entering same password
         data = {
             "current_password": current_password,
             "new_password": new_password,
+            "username": username,
         }
-        result = requests.put(
-            users_url + username + "/password",
-            json=data,
-            headers={"Content-Type": "application/json"},
-        )
-        return result, redirect("main.html")
-    return render_template("change_password.html")
+        print(data)
+        try:
+            result = invoke_http(
+                users_url + "users/change_password",
+                method="PUT",
+                json=data,
+                headers={"Content-Type": "application/json"},
+            )
+            return jsonify(
+                {
+                    "data": "Password changed successfully",
+                }
+            )
+        except:
+            return jsonify({"code": 602, "data": "error"})
+    return jsonify({"code": 600, "data": "Please change your password"})
 
 
 if __name__ == "__main__":

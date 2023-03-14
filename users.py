@@ -41,18 +41,20 @@ def model_to_json(model_obj):
 
 
 # Update user password endpoint for when password expires after 60 days
-@app.route("/users/<username>/password", methods=["PUT"])
-def update_user_password(username):
+@app.route("/users/change_password", methods=["PUT"])
+def update_user_password():
+    username = request.json["username"]
     user = Users.query.filter_by(username=username).first()
     if user is None:
-        return {"message": "User not found"}, 404
+        return jsonify({"message": "User not found"}), 404
 
     current_password = request.json["current_password"]
     new_password = request.json["new_password"]
+
     if not bcrypt.checkpw(
         current_password.encode("utf-8"), user.password_hash.encode("utf-8")
     ):
-        return {"message": "Incorrect password"}, 401
+        return jsonify({"message": "Incorrect password"}), 401
 
     new_hashed_password = bcrypt.hashpw(
         new_password.encode("utf-8"), bcrypt.gensalt()
@@ -61,7 +63,7 @@ def update_user_password(username):
     user.last_password_change_date = datetime.date.today()
     db.session.commit()
 
-    return {"message": "Password updated successfully"}
+    return jsonify({"message": "Password updated successfully"}, 200)
 
 
 # ----------------------------------------------REGISTRATION -----------------------------------------------------------

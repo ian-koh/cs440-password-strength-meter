@@ -3,21 +3,20 @@ var users_url = "http://localhost:5000/";
 var password_policy_url = "http://localhost:5001/";
 
 // Check password strength using zxcvbn.js and update strength meter and text
-var usernameInput = document.getElementById('username-register');
-var passwordInput = document.getElementById('password-register');
 var meter = document.getElementById('password-strength-meter');
 var text = document.getElementById('password-strength-text');
 var submitButton = document.getElementById("submit-button");
-var regForm = document.getElementById('reg-form');
-
-
+var passwordChangeForm = document.getElementById('pass-change-form')
+var changePasswordInput = document.getElementById('new-password')
+var params = new URLSearchParams(window.location.search);
+var username = params.get("username");
 
 
 
 // Disables submit button for registation form unless zxvbn condition is met
 submitButton.disabled = true;
 
-passwordInput.addEventListener('input', checkPasswordStrength);
+changePasswordInput.addEventListener('input', checkPasswordStrength);
 
 function checkPasswordStrength() {
     //check the password strength and return the result
@@ -34,26 +33,36 @@ function checkPasswordStrength() {
     }
 }
 
-//onSubmitting registration form, calls the backend and add user to database with password hashed with bcrypt
-regForm.addEventListener("submit", registerUser);
-function registerUser(event) {
+
+
+
+
+passwordChangeForm.addEventListener("submit", changePassword);
+function changePassword(event) {
     // Prevent the default form submission
     event.preventDefault();
     // Get the form data
-    var username = document.getElementById("username-register").value;
-    var password = document.getElementById("password-register").value;
+    var current_password = document.getElementById("current-password").value;
+    var new_password = document.getElementById("new-password").value;
+    var re_new_password = document.getElementById("re-new-password").value;
 
     // Do something with the data
-    console.log(username);
-    console.log(password);
+    // If current_password == new_password, return error
+    if (current_password == new_password) {
+        document.getElementById("response-message").innerHTML = "Please enter a different password from your current password";
+        throw new Error('Current and new password cannot be the same');
+    }
+
+    // If new_password and re_new_password do not match, return error
     var data = {
-        username: username,
-        password: password
+        current_password: current_password,
+        new_password: new_password,
+        username: username
     }
     console.log(data)
 
 
-    fetch(users_url + "users", {
+    fetch(password_policy_url + "change_password", {
         method: 'POST',
         mode: 'cors',
         headers: {
@@ -70,10 +79,12 @@ function registerUser(event) {
         })
         .then(data => {
             console.log(data);
-            document.getElementById("response-message").innerHTML = data["message"];
+            document.getElementById("response-message").innerHTML = data["data"];
         })
         .catch(error => {
             console.error('Error:', error);
         });
 
 }
+
+
