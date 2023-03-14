@@ -41,6 +41,10 @@ async function processFormData(event) {
     if (result.code === 401) {
         document.getElementById("error-message").innerHTML = "Unauthorized"
     }
+    if (result.code === 500) {
+        document.getElementById("error-message").innerHTML = "User does not exist"
+    }
+
 
 
 

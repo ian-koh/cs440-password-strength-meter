@@ -42,7 +42,7 @@ def login():
             print(user)
 
         except:
-            return {"message": "User does not exist"}
+            return jsonify({"code": 500, "data": "User does not exist"})
         # If password is wrong
         if not bcrypt.checkpw(
             password.encode("utf-8"), user["password_hash"].encode("utf-8")
