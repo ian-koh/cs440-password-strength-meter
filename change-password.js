@@ -10,6 +10,14 @@ var passwordChangeForm = document.getElementById('pass-change-form')
 var changePasswordInput = document.getElementById('new-password')
 var params = new URLSearchParams(window.location.search);
 var username = params.get("username");
+var proceedButton = document.getElementById("proceed-button");
+
+proceedButton.disabled = true;
+proceedButton.addEventListener('click', redirectToHome);
+
+function redirectToHome() {
+    location.replace("templates/main.html");
+}
 
 
 
@@ -80,6 +88,10 @@ function changePassword(event) {
         .then(data => {
             console.log(data);
             document.getElementById("response-message").innerHTML = data["data"];
+            if (data["code"] == 200) {
+                proceedButton.disabled = false;
+            }
+
         })
         .catch(error => {
             console.error('Error:', error);

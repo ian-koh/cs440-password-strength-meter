@@ -1,6 +1,6 @@
 
 var users_url = "http://localhost:5000/";
-var password_policy_url = "http://localhost:5001/";
+// var password_policy_url = "http://localhost:5001/";
 
 // Check password strength using zxcvbn.js and update strength meter and text
 var usernameInput = document.getElementById('username-register');

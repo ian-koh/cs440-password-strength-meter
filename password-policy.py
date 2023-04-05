@@ -92,6 +92,7 @@ def change_password():
             )
             return jsonify(
                 {
+                    "code": 200,
                     "data": "Password changed successfully",
                 }
             )
